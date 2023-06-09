@@ -18,10 +18,10 @@ namespace BlueBrown.BigBola.Api.Controllers
 		[HttpGet]
 		[Route("[action]")]
 		public async Task<IReadOnlyCollection<WalletAction>> GetWalletActions(
-			[FromQuery] DateTime start_date, [FromQuery] DateTime end_date, 
+			[FromQuery] string startDate, [FromQuery] string endDate, 
 			[FromQuery] int rows, [FromQuery] int page)
 		{
-			return await _repository.ReadWalletActions(start_date, end_date, rows, page);
+			return await _repository.ReadWalletActions(startDate, endDate, rows, page);
 		}
 	}
 }

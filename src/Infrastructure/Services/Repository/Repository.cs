@@ -6,7 +6,7 @@ namespace BlueBrown.BigBola.Infrastructure.Services.Repository
 {
 	internal class Repository : IRepository
 	{
-		public async Task<IReadOnlyCollection<WalletAction>> ReadWalletActions(DateTime start_date, DateTime end_date, int rows, int page)
+		public async Task<IReadOnlyCollection<WalletAction>> ReadWalletActions(string startDate, string endDate, int rows, int page)
 		{
 			//test
 			return default;

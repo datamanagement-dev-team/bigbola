@@ -22,6 +22,5 @@
         public string State { get; init; } = string.Empty;
         public string Country { get; init; } = string.Empty;
         public int ZipCode { get; init; }
-
     }
 }
