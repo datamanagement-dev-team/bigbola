@@ -9,6 +9,6 @@
         public decimal Profit { get; init; }
         public decimal Investment { get; init; }
         public decimal NetPayment { get; init; }
-        public Player? Player { get; init; }
+        public Player Player { get; init; }
     }
 }
