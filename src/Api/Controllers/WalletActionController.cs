@@ -1,4 +1,5 @@
-﻿using BlueBrown.BigBola.Application.Services.Repository;
+﻿using BlueBrown.BigBola.Application.Entities;
+using BlueBrown.BigBola.Application.Services.Repository;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BlueBrown.BigBola.Api.Controllers
@@ -16,9 +17,9 @@ namespace BlueBrown.BigBola.Api.Controllers
 
 		[HttpGet]
 		[Route("[action]")]
-		public async Task<object> GetWalletActions()
+		public async Task<IReadOnlyCollection<WalletAction>> GetWalletActions([FromQuery] Request request)
 		{
-			return await _repository.ReadWalletActions();
+			return await _repository.ReadWalletActions(request);
 		}
 	}
 }
