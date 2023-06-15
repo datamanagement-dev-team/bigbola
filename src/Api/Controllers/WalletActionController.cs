@@ -22,7 +22,11 @@ namespace BlueBrown.BigBola.Api.Controllers
 			[FromQuery] string startDate, [FromQuery] string endDate, 
 			[FromQuery] int rows, [FromQuery] int page)
 		{
-			return await _repository.ReadWalletActions(startDate, endDate, rows, page);
+			var request = new Request(startDate, endDate, rows, page);
+
+			var result = await _repository.ReadWalletActions(request);
+
+			return result;
 		}
 
         [HttpGet]

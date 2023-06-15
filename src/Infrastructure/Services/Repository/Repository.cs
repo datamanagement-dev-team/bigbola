@@ -1,4 +1,5 @@
-﻿using BlueBrown.BigBola.Application.Entities;
+﻿using BlueBrown.BigBola.Application;
+using BlueBrown.BigBola.Application.Entities;
 using BlueBrown.BigBola.Application.Services.Repository;
 using Dapper;
 using Microsoft.Data.SqlClient;
@@ -7,13 +8,21 @@ namespace BlueBrown.BigBola.Infrastructure.Services.Repository
 {
 	public class Repository : IRepository
 	{
-		public async Task<IReadOnlyCollection<WalletAction>> ReadWalletActions(string startDate, string endDate, int rows, int page)
+
+        private readonly ISettings _settings;
+
+        public Repository(ISettings settings)
+        {
+            _settings = settings;
+        }
+
+        public async Task<IReadOnlyCollection<WalletAction>> ReadWalletActions(Request request)
 		{
-			//todo connectionstring
-            using var db = new SqlConnection("Data Source=devgr-rpt-01.devgr-novibet.systems;Initial Catalog=BBReporting;Transaction Binding=Explicit Unbind;Persist Security Info=True;User ID=sa;Password=p@ssw0rd;Connect Timeout=60;Encrypt=True;TrustServerCertificate=True");
+            using var db = new SqlConnection(_settings.ReportingConnectionString);
 
             await db.QuerySingleAsync<int>("SELECT 1");
-            return default;
+
+            return new List<WalletAction>();
 		}
 	}
 }
