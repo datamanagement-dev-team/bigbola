@@ -4,7 +4,7 @@ using App.Metrics.Timer;
 
 namespace BlueBrown.BigBola.Infrastructure.Services.Metrics
 {
-    public class Metrics : Application.Services.Metrics.IMetrics
+    internal class Metrics : Application.Services.Metrics.IMetrics
     {
         private readonly IMetrics _metrics;
 

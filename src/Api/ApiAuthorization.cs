@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-using YamlDotNet.Core.Tokens;
 
 namespace BlueBrown.BigBola.Api
 {

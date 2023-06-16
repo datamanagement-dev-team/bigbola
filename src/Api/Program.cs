@@ -1,4 +1,5 @@
 using BlueBrown.BigBola.Api;
+using BlueBrown.BigBola.Infrastructure;
 
 var webApplicationBuilder = WebApplication.CreateBuilder(args);
 

@@ -24,16 +24,11 @@ namespace BlueBrown.BigBola.Api.Controllers
 		{
 			var request = new Request(startDate, endDate, rows, page);
 
+			//todo discuss if we make a new level for processing the data that the repo returns
+
 			var result = await _repository.ReadWalletActions(request);
 
 			return result;
 		}
-
-        [HttpGet]
-        [Route("[action]")]
-        public async Task<IActionResult> Get()
-        {
-            return Ok();
-        }
     }
 }

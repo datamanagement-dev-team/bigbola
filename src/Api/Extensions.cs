@@ -1,6 +1,5 @@
-﻿using App.Metrics;
-using App.Metrics.Formatters.Prometheus;
-using BlueBrown.BigBola.Application;
+﻿using BlueBrown.BigBola.Application;
+using BlueBrown.BigBola.Application.Services.Metrics;
 using BlueBrown.BigBola.Application.Services.Repository;
 using BlueBrown.BigBola.Application.Services.Repository.Decorators;
 using BlueBrown.BigBola.Infrastructure;
@@ -24,6 +23,8 @@ namespace BlueBrown.BigBola.Api
 
             builder.AddJsonFile(path: "appsettings.json", optional: false);
 
+            builder.AddConsulVault();
+
             builder.AddJsonFile(path: $"appsettings.{environmentName}.json", optional: true);
 
             builder.SetBasePath(Directory.GetCurrentDirectory());
@@ -36,6 +37,8 @@ namespace BlueBrown.BigBola.Api
 
         internal static void Configure(this IServiceCollection services, IConfiguration configuration)
         {
+            services.RegisterConsulVault(configuration);
+
             services.RegisterSettings(configuration);
 
             services.RegisterMetrics();
@@ -43,12 +46,8 @@ namespace BlueBrown.BigBola.Api
             services.RegisterOpenApi();
 
             services.AddSingleton<ApiKeyAuthorizationFilter>();
-            services.AddScoped<Repository>();
-            services.AddScoped<IRepository>(provider =>
-                new RepositoryLogDecorator(provider.GetRequiredService<Repository>(), 
-                provider.GetRequiredService<ILoggerFactory>().CreateLogger<RepositoryLogDecorator>(),
-                new Infrastructure.Services.Metrics.Metrics(provider.GetRequiredService<App.Metrics.IMetrics>()),
-                provider.GetRequiredService<ISettings>()));
+
+            services.RegisterRepository();
 
             services
                 .AddControllers()
@@ -58,37 +57,6 @@ namespace BlueBrown.BigBola.Api
                 });
 
             services.RegisterHealthChecks();
-        }
-
-        public static void ConfigureMetrics(this IHostBuilder builder, IConfiguration configuration)
-        {
-            builder.ConfigureMetrics(_builder =>
-            {
-                _builder.Configuration.Configure(_options =>
-                {
-                    _options.ContextualTags.Clear();
-
-                    _options.GlobalTags.Clear();
-                });
-            });
-
-            builder.UseMetricsEndpoints(_options =>
-            {
-                _options.EnvironmentInfoEndpointEnabled = false;
-
-                _options.MetricsEndpointEnabled = true;
-
-                _options.MetricsTextEndpointEnabled = false;
-            });
-
-            builder.ConfigureAppMetricsHostingConfiguration(_options =>
-            {
-                var settings = new Settings();
-
-                configuration.Bind(nameof(Settings), settings);
-
-                _options.MetricsEndpoint = settings.MetricsUrl;
-            });
         }
 
         internal static void Configure(this ILoggingBuilder builder)
@@ -135,26 +103,6 @@ namespace BlueBrown.BigBola.Api
                     },
                 });
             });
-        }
-
-        public static void RegisterMetrics(this IServiceCollection services)
-        {
-            services.AddMetrics(_builder =>
-            {
-                _builder.Configuration.Configure(_options =>
-                {
-                    _options.ContextualTags.Clear();
-
-                    _options.GlobalTags.Clear();
-                });
-            });
-
-            services.AddMetricsEndpoints(_options =>
-            {
-                _options.MetricsEndpointOutputFormatter = new MetricsPrometheusTextOutputFormatter();
-            });
-
-            //todo services.AddAppMetricsHealthPublishing();
         }
 
         private static void RegisterHealthChecks(this IServiceCollection services)

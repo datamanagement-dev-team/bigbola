@@ -8,18 +8,12 @@ namespace BlueBrown.BigBola.Infrastructure
         public string ReportingDatabaseServerName { get; init; } = string.Empty;
         public string ReportingDatabaseName { get; init; } = string.Empty;
         public string ReportingConnectionString { get; private set; } = string.Empty;
-        public string ValidRequestDateFormat { get; private set; } = string.Empty;
         public string MetricsUrl { get; init; } = string.Empty;
         public string HealthChecksUrl { get; init; } = string.Empty;
 
         public void SetReportingConnectionString(string connectionString)
         {
             ReportingConnectionString = connectionString;
-        }
-
-        public void SetValidRequestDateFormat(string validRequestDateFormat)
-        {
-            ValidRequestDateFormat = validRequestDateFormat;
         }
     }
 }

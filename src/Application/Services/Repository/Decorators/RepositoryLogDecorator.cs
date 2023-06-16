@@ -32,9 +32,11 @@ namespace BlueBrown.BigBola.Application.Services.Repository.Decorators
                 request.rows,
                 request.page);
 
+            const string format = "dd/MM/yyyy";
+
             DateTime date;
-            if (!DateTime.TryParseExact(request.startDate, _settings.ValidRequestDateFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out date)
-                && !DateTime.TryParseExact(request.endDate, _settings.ValidRequestDateFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out date))
+            if (!DateTime.TryParseExact(request.startDate, format, CultureInfo.InvariantCulture, DateTimeStyles.None, out date)
+                && !DateTime.TryParseExact(request.endDate, format, CultureInfo.InvariantCulture, DateTimeStyles.None, out date))
             {
                 _logger.LogError("Invalid date format");
 
