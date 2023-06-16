@@ -1,9 +1,5 @@
 ﻿using BlueBrown.BigBola.Application;
-using BlueBrown.BigBola.Application.Services.Metrics;
-using BlueBrown.BigBola.Application.Services.Repository;
-using BlueBrown.BigBola.Application.Services.Repository.Decorators;
 using BlueBrown.BigBola.Infrastructure;
-using BlueBrown.BigBola.Infrastructure.Services.Repository;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Newtonsoft.Json;
@@ -15,169 +11,179 @@ using System.Net.Mime;
 
 namespace BlueBrown.BigBola.Api
 {
-    internal static class Extensions
-    {
-        internal static void Configure(this IConfigurationBuilder builder, string environmentName)
-        {
-            builder.Sources.Clear();
+	internal static class Extensions
+	{
+		internal static void Configure(this IConfigurationBuilder builder, string environmentName)
+		{
+			builder.Sources.Clear();
 
-            builder.AddJsonFile(path: "appsettings.json", optional: false);
+			builder.AddJsonFile(path: "appsettings.json", optional: false);
 
-            builder.AddConsulVault();
+			builder.AddConsulVault();
 
-            builder.AddJsonFile(path: $"appsettings.{environmentName}.json", optional: true);
+			builder.AddJsonFile(path: $"appsettings.{environmentName}.json", optional: true);
 
-            builder.SetBasePath(Directory.GetCurrentDirectory());
+			builder.SetBasePath(Directory.GetCurrentDirectory());
 
-            builder.SetFileLoadExceptionHandler(_context =>
-            {
-                throw _context.Exception;
-            });
-        }
+			builder.SetFileLoadExceptionHandler(_context =>
+			{
+				throw _context.Exception;
+			});
+		}
 
-        internal static void Configure(this IServiceCollection services, IConfiguration configuration)
-        {
-            services.RegisterConsulVault(configuration);
+		internal static void Configure(this IServiceCollection services, IConfiguration configuration)
+		{
+			services.RegisterSettings(configuration);
 
-            services.RegisterSettings(configuration);
+			services.RegisterConsulVault(configuration);
 
-            services.RegisterMetrics();
+			services.RegisterMetrics();
 
-            services.RegisterOpenApi();
+			services.RegisterOpenApi();
 
-            services.AddSingleton<ApiKeyAuthorizationFilter>();
+			services.AddSingleton<ApiKeyAuthorizationFilter>();
 
-            services.RegisterRepository();
+			services.RegisterRepository();
 
-            services
-                .AddControllers()
-                .AddJsonOptions(_options =>
-                {
-                    _options.JsonSerializerOptions.WriteIndented = true;
-                });
+			services
+				.AddControllers()
+				.AddJsonOptions(_options =>
+				{
+					_options.JsonSerializerOptions.WriteIndented = true;
+				});
 
-            services.RegisterHealthChecks();
-        }
+			services.RegisterHealthChecks();
 
-        internal static void Configure(this ILoggingBuilder builder)
-        {
-            builder.ClearProviders();
+			services.AddTransient<ExceptionHandlingMiddleware>();
+		}
 
-            builder.SetMinimumLevel(LogLevel.Trace);
+		internal static void Configure(this ILoggingBuilder builder)
+		{
+			builder.ClearProviders();
 
-            builder.AddNLog();
-        }
+			builder.SetMinimumLevel(LogLevel.Trace);
 
-        internal static void Configure(this IApplicationBuilder builder)
-        {
-            builder.UseRouting();
+			builder.AddNLog();
+		}
 
-            builder.UseOpenApi();
+		internal static void Configure(this IApplicationBuilder builder)
+		{
+			builder.UseRouting();
 
-            builder.UseMiddleware<RequestValidationMiddlware>();
+			builder.UseOpenApi();
 
-            builder.UseEndpoints(_builder =>
-            {
-                _builder.MapControllers();
+			//todo add middleware as transient
+			builder.UseMiddleware<ExceptionHandlingMiddleware>();
 
-                var settings = builder.ApplicationServices.GetRequiredService<ISettings>();
+			builder.UseEndpoints(_builder =>
+			{
+				_builder.MapControllers();
 
-                _builder.MapHealthChecks(settings.HealthChecksUrl, new HealthCheckOptions
-                {
-                    Predicate = _ => true,
-                    ResponseWriter = async (_httpContext, _healthReport) =>
-                    {
-                        var settings = new JsonSerializerSettings
-                        {
-                            Converters = new List<JsonConverter>
-                            {
-                                new StringEnumConverter()
-                            },
-                            Formatting = Formatting.Indented
-                        };
+				var settings = builder.ApplicationServices.GetRequiredService<ISettings>();
 
-                        var response = JsonConvert.SerializeObject(_healthReport, settings);
+				_builder.MapHealthChecks(settings.HealthChecksUrl, new HealthCheckOptions
+				{
+					Predicate = _ => true,
+					ResponseWriter = async (_httpContext, _healthReport) =>
+					{
+						var settings = new JsonSerializerSettings
+						{
+							Converters = new List<JsonConverter>
+							{
+								new StringEnumConverter()
+							},
+							Formatting = Formatting.Indented
+						};
+
+						var response = JsonConvert.SerializeObject(_healthReport, settings);
 
 
-                        await _httpContext.Response.WriteAsync(response);
-                    },
-                });
-            });
-        }
+						await _httpContext.Response.WriteAsync(response);
+					},
+				});
+			});
+		}
 
-        private static void RegisterHealthChecks(this IServiceCollection services)
-        {
-            using var serviceProvider = services.BuildServiceProvider();
+		private static void RegisterHealthChecks(this IServiceCollection services)
+		{
+			using var serviceProvider = services.BuildServiceProvider();
 
-            var settings = serviceProvider.GetRequiredService<ISettings>();
+			var settings = serviceProvider.GetRequiredService<ISettings>();
 
-            services
-                .AddHealthChecks()
-                .AddSqlServer(
-                    connectionString: settings.ReportingConnectionString,
-                    name: "BBReporting",
-                    failureStatus: HealthStatus.Unhealthy);
-        }
+			services
+				.AddHealthChecks()
+				.AddSqlServer(
+					connectionString: settings.ReportingConnectionString,
+					name: "BBReporting",
+					failureStatus: HealthStatus.Unhealthy);
+		}
 
-        private static void RegisterOpenApi(this IServiceCollection services)
-        {
-            services.AddSwaggerDocument(_settings =>
-            {
-                _settings.SchemaType = SchemaType.OpenApi3;
+		private static void RegisterOpenApi(this IServiceCollection services)
+		{
+			services.AddSwaggerDocument(_settings =>
+			{
+				_settings.SchemaType = SchemaType.OpenApi3;
 
-                _settings.DocumentName = "api documentation";
+				_settings.DocumentName = "api documentation";
 
-                _settings.PostProcess = _openApiDocument =>
-                {
-                    _openApiDocument.Info = new OpenApiInfo
-                    {
-                        Description = "api documentaion",
-                        Title = "api",
-                        Version = "1.0.0"
-                    };
+				_settings.PostProcess = _openApiDocument =>
+				{
+					_openApiDocument.Info = new OpenApiInfo
+					{
+						Description = "api documentaion",
+						Title = "api",
+						Version = "1.0.0"
+					};
 
-                    _openApiDocument.Consumes = new string[]
-                    {
-                        MediaTypeNames.Application.Json
-                    };
+					_openApiDocument.Consumes = new string[]
+					{
+						MediaTypeNames.Application.Json
+					};
 
-                    _openApiDocument.Produces = new string[]
-                    {
-                        MediaTypeNames.Application.Json
-                    };
-                };
+					_openApiDocument.Produces = new string[]
+					{
+						MediaTypeNames.Application.Json
+					};
+				};
 
-                _settings.AddSecurity("ApiKeyAuth", Enumerable.Empty<string>(), new OpenApiSecurityScheme { 
-                    Type = OpenApiSecuritySchemeType.ApiKey, 
-                    In = OpenApiSecurityApiKeyLocation.Header, 
-                    Name = "Operation-API-Key",
-                    
-                });
+				var securityDefinitionName = "ApiKeyAuthentication";
 
-                _settings.OperationProcessors.Add(new AspNetCoreOperationSecurityScopeProcessor("ApiKeyAuth"));
+				_settings.AddSecurity(
+					name: securityDefinitionName,
+					globalScopeNames: Enumerable.Empty<string>(),
+					swaggerSecurityScheme: new OpenApiSecurityScheme
+					{
+						Type = OpenApiSecuritySchemeType.ApiKey,
+						In = OpenApiSecurityApiKeyLocation.Header,
+						//todo get from settings
+						Name = "Operation-API-Key",
 
-            });
-        }
+					});
 
-        private static void UseOpenApi(this IApplicationBuilder builder)
-        {
+				_settings.OperationProcessors.Add(new AspNetCoreOperationSecurityScopeProcessor(securityDefinitionName));
 
-            builder.Use(async (_httpContext, _nextRequestDelegate) =>
-            {
-                if (_httpContext.Request.Path.Value == "/")
-                    _httpContext.Request.Path = "/api/documentation";
+			});
+		}
 
-                await _nextRequestDelegate();
-            });
+		private static void UseOpenApi(this IApplicationBuilder builder)
+		{
+			builder.Use(async (_httpContext, _nextRequestDelegate) =>
+			{
+				if (_httpContext.Request.Path.Value == "/")
+					//todo get from settings
+					_httpContext.Request.Path = "/api/documentation";
 
-            NSwagApplicationBuilderExtensions.UseOpenApi(builder);
+				await _nextRequestDelegate();
+			});
 
-            builder.UseSwaggerUi3(_swaggerUi3Settings =>
-            {
-                _swaggerUi3Settings.Path = "/api/documentation";
+			NSwagApplicationBuilderExtensions.UseOpenApi(builder);
 
-                _swaggerUi3Settings.DocumentTitle = "api documentation";
-            });
-        }
-    }
+			builder.UseSwaggerUi3(_swaggerUi3Settings =>
+			{
+				_swaggerUi3Settings.Path = "/api/documentation";
+
+				_swaggerUi3Settings.DocumentTitle = "api documentation";
+			});
+		}
+	}
 }

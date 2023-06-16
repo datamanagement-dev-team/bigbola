@@ -1,30 +1,32 @@
 ﻿namespace BlueBrown.BigBola.Application.Entities
 {
-    public record Request
-    {
-        public string startDate { get; private set; } = string.Empty;
-        public string endDate { get; private set; } = string.Empty;
-        public int rows { get; init; }
-        public int page { get; init; }
+	public record Request
+	{
+		private readonly string _databaseDateTimeFormat = "yyyy-MM-dd";
 
-        public Request(string startDate, string endDate, int rows, int page)
-        {
-            this.startDate = startDate;
-            this.endDate = endDate;
-            this.rows = rows;
-            this.page = page;
-        }
+		public string StartDate { get; private set; } = string.Empty;
+		public string EndDate { get; private set; } = string.Empty;
+		public int Rows { get; init; }
+		public int Page { get; init; }
 
-        public void UpdateStartDate()
-        {
-            var date = DateTime.Parse(startDate);
-            startDate = date.ToString("yyyy-MM-dd");
-        }
+		public Request(string startDate, string endDate, int rows, int page)
+		{
+			StartDate = startDate;
+			EndDate = endDate;
+			Rows = rows;
+			Page = page;
+		}
 
-        public void UpdateEndDate()
-        {
-            var date = DateTime.Parse(endDate);
-            endDate = date.ToString("yyyy-MM-dd");
-        }
-    }
+		public void UpdateStartDate()
+		{
+			var date = DateTime.Parse(StartDate);
+			StartDate = date.ToString(_databaseDateTimeFormat);
+		}
+
+		public void UpdateEndDate()
+		{
+			var date = DateTime.Parse(EndDate);
+			EndDate = date.ToString(_databaseDateTimeFormat);
+		}
+	}
 }

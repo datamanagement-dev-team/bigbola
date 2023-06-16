@@ -1,6 +1,9 @@
 using BlueBrown.BigBola.Api;
 using BlueBrown.BigBola.Infrastructure;
 
+//todo create custom jsonConverter to return type as bigbola expects
+//todo add exception handling, logging
+
 var webApplicationBuilder = WebApplication.CreateBuilder(args);
 
 var environmentName = webApplicationBuilder.Environment.EnvironmentName;

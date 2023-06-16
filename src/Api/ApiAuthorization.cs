@@ -3,34 +3,35 @@ using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace BlueBrown.BigBola.Api
 {
-    public class ApiKeyAttribute : ServiceFilterAttribute
-    {
-        public ApiKeyAttribute()
-            : base(typeof(ApiKeyAuthorizationFilter))
-        {
-        }
-    }
+	//todo move to Filters folder
+	internal class ApiKeyAttribute : ServiceFilterAttribute
+	{
+		public ApiKeyAttribute()
+			: base(typeof(ApiKeyAuthorizationFilter))
+		{
+		}
+	}
 
-    public class ApiKeyAuthorizationFilter : IAuthorizationFilter
-    {
-        private const string XApiKey = "Operation-API-Key";
-        private const string XApiValue = "Value";
+	internal class ApiKeyAuthorizationFilter : IAuthorizationFilter
+	{
+		//todo read from settings
+		private readonly string _headerKey = "Operation-API-Key";
+		//todo read from settings
+		private readonly string _headerValue = "Value";
 
-        public void OnAuthorization(AuthorizationFilterContext context)
-        {
-            bool apiKeyExists = context.HttpContext.Request.Headers.ContainsKey(XApiKey);
+		public void OnAuthorization(AuthorizationFilterContext context)
+		{
+			var headerExists = context.HttpContext.Request.Headers.ContainsKey(_headerKey);
 
-            if (!apiKeyExists)
-            {
-                context.Result = new UnauthorizedResult();
-            }
+			if (!headerExists)
+				throw new AuthenticationException();
 
-            string apiValue = context.HttpContext.Request.Headers[XApiKey];
+			var headerValue = context.HttpContext.Request.Headers[_headerKey];
 
-            if(!apiValue.Equals(XApiValue))
-            {
-                context.Result = new UnauthorizedResult();
-            }
-        }
-    }
+			if (!string.Equals(headerValue, _headerValue))
+				throw new AuthenticationException();
+		}
+	}
+
+	internal class AuthenticationException : Exception { }
 }

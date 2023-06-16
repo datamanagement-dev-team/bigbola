@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Mvc;
 namespace BlueBrown.BigBola.Api.Controllers
 {
 	[ApiController]
-	[Route("api/[controller]")]
 	public class WalletActionController : ControllerBase
 	{
 		private readonly IRepository _repository;
@@ -16,19 +15,17 @@ namespace BlueBrown.BigBola.Api.Controllers
 		}
 
 		[HttpGet]
-        [ApiKey]
-        [Route("[action]")]
+		[ApiKey]
+		[Route("~/files/web/kyc/search")]
 		public async Task<IReadOnlyCollection<WalletAction>> GetWalletActions(
-			[FromQuery] string startDate, [FromQuery] string endDate, 
-			[FromQuery] int rows, [FromQuery] int page)
+			[FromQuery] string startDate,
+			[FromQuery] string endDate,
+			[FromQuery] int rows,
+			[FromQuery] int page)
 		{
 			var request = new Request(startDate, endDate, rows, page);
 
-			//todo discuss if we make a new level for processing the data that the repo returns
-
-			var result = await _repository.ReadWalletActions(request);
-
-			return result;
+			return await _repository.ReadWalletActions(request);
 		}
-    }
+	}
 }
